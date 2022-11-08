@@ -1,11 +1,11 @@
-#' ms_2D_barplotting_simprof
+#' IMPRINTS_corr_to_ref_sh
 #'
 #' Function to generate 2D bar plot and pdf file with multipanel bar plots for 2D-CETSA data of
 #' proteins which have similar profile from a selected protein.
 #' It is totally based on the function ms_2D_barplotting from the mineCETSA package.
 #'
 #' @param data Dataset after calculating the relative protein abundance differences and deriving the average of the profile,
-#'             ie ms_2D_average_sh, make sure the columns with readings are named in the format like "(Set_)37C_Treatment"
+#'             ie IMPRINTS_average_sh, make sure the columns with readings are named in the format like "(Set_)37C_Treatment"
 #' @param set A single character to indicate the sample name, if any
 #' @param treatment A single character to indicate the sample name
 #' @param reference A numeric vector with the profile readings
@@ -20,7 +20,7 @@
 #' @export
 #'
 
-ms_2D_corr_to_ref_sh <- function (data = NULL, set = NULL, treatment = NULL, reference = NULL,
+IMPRINTS_corr_to_ref_sh <- function (data = NULL, set = NULL, treatment = NULL, reference = NULL,
                                   use_score = c("euclidean", "pearson"),
                                   score_threshold = 0.9, include_neg = FALSE, max_na = 0)
 {

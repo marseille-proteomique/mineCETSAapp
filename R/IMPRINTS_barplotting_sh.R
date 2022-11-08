@@ -1,4 +1,4 @@
-#' ms_2D_barplotting_sh
+#' IMPRINTS_barplotting_sh
 #'
 #' Function to generate 2D bar plot and pdf file with multipanel bar plots for 2D-CETSA data.
 #' It is totally based on the function ms_2D_barplotting from the mineCETSA package.
@@ -41,14 +41,14 @@
 #'
 #' elutriation_wVeh <- elutriation[,-grep("G1",names(elutriation))]
 #' O43776_elu <- ms_subsetting(elutriation_wVeh, isfile = FALSE, hitidlist = c("O43776"))
-#' ms_2D_barplotting_sh(O43776_elu)
+#' IMPRINTS_barplotting_sh(O43776_elu)
 #'
 #' @seealso \code{\link{ms_2D_barplotting}}
 #'
 #' @export
 #'
 
-ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), setlevel = NULL, corrtable = NULL,
+IMPRINTS_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), setlevel = NULL, corrtable = NULL,
                                   plotseq = NULL, printBothName = TRUE, printGeneName = FALSE,
                                   pfdatabase = FALSE, witherrorbar = TRUE, layout = NULL,
                                   colorpanel = PaletteWithoutGrey(treatmentlevel),
@@ -130,6 +130,7 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
                                         ncol = 1)
       return(q_list)
     }
+
     else {
       if (!log2scale) {
         minreading = 0.5
@@ -145,6 +146,16 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
                               0.1, minreading), max(max(d1$mean, na.rm = T) +
                                                       0.1, maxreading))
       }
+      d1$QP <- FALSE
+      if("36C" %in% d1$temperature){
+        d1$QP[which(d1$temperature == "36C")] <- TRUE
+        lvl_tokeep <- levels(d1$condition)
+        lvl_tokeep <- stringr::str_replace_all(lvl_tokeep, "36C", "QP")
+        d1$condition <- as.character(d1$condition)
+        d1$condition[which(d1$temperature == "36C")] <- stringr::str_replace_all(d1$condition[which(d1$temperature == "36C")],
+                                                                                 "36C", "QP")
+        d1$condition <- factor(d1$condition, levels = lvl_tokeep)
+      }
       if (linegraph) {
         colorpanel <- PaletteWithoutGrey(temperature)
         q <- ggplot(d1, aes(x = treatment, y = mean,
@@ -154,18 +165,26 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       }
       else if (!usegradient) {
         q <- ggplot(d1, aes(x = condition, y = mean,
-                            fill = treatment)) + geom_bar(stat = "identity") +
+                            fill = treatment)) + geom_bar(stat = "identity", aes(color = QP),
+                                                          size = rel(0.85)) +
           coord_cartesian(ylim = legendscale) + scale_fill_manual(drop = FALSE,
-                                                                  values = colorpanel)
+                                                                  values = colorpanel) +
+          scale_color_manual(values = c("TRUE" = "#656565", "FALSE" = "#FFFFFF00")) +
+          guides(color = "none") +
+          scale_x_discrete(labels = stringr::str_remove_all(levels(d1$condition), "_.{1,}"))
       }
       else {
         q <- ggplot(d1, aes(x = condition, y = mean,
-                            fill = mean)) + geom_bar(stat = "identity") +
+                            fill = mean)) + geom_bar(stat = "identity", aes(color = QP),
+                                                     size = rel(0.85)) +
           coord_cartesian(ylim = legendscale) +
           scale_fill_gradient2(limits = legendscale,
                                low = colorgradient[1], mid = colorgradient[2],
                                high = colorgradient[3], midpoint = 0, na.value = "gray90",
-                               guide = guide_colorbar(""))
+                               guide = guide_colorbar("")) +
+          scale_color_manual(values = c("TRUE" = "#656565", "FALSE" = "#FFFFFF00")) +
+          guides(color = "none") +
+          scale_x_discrete(labels = stringr::str_remove_all(levels(d1$condition), "_.{1,}"))
       }
       if (witherrorbar) {
         if (linegraph) {
@@ -195,7 +214,8 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
                                 panel.grid.minor = element_blank(), strip.background = element_blank(),
                                 axis.line.x = element_line(), axis.line.y = element_line(),
                                 axis.text.x = element_text(angle = 45, hjust = 1,
-                                                           size = rel(0.7)), aspect.ratio = ratio)
+                                                           size = rel(0.7)),
+                                aspect.ratio = ratio)
       return(q)
     }
   }
@@ -379,10 +399,11 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
         n_p <- length(names(groups))
         pl[[k]] <- lapply(names(groups), function(i) {
           message(paste("Saving page", i, "/", n_p))
-          gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
-                                          c(plots[groups[[i]]], params,
-                                            top = paste(toplabel, k), left = leftlabel,
-                                            bottom = bottomlabel)))
+          do.call(gridExtra::arrangeGrob,
+                  c(plots[groups[[i]]], params,
+                    top = paste(toplabel, k), left = leftlabel,
+                    bottom = bottomlabel)
+                  )
           })
 
         class(pl[[k]]) <- c("arrangelist", "ggplot", class(pl[[k]]))
@@ -600,10 +621,12 @@ ms_2D_barplotting_sh <- function (data, treatmentlevel = get_treat_level(data), 
       n_p <- length(names(groups))
       pl <- lapply(names(groups), function(i) {
         message(paste("Saving page", i, "/", n_p))
-        gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
-                                        c(plots[groups[[i]]], params,
-                                          top = toplabel, left = leftlabel,
-                                          bottom = bottomlabel)))
+        do.call(gridExtra::arrangeGrob,
+                c(plots[groups[[i]]], params,
+                top = toplabel, left = leftlabel,
+                bottom = bottomlabel)
+                )
+
       })
 
       class(pl) <- c("arrangelist", "ggplot", class(pl))

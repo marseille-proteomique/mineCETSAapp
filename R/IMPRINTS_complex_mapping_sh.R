@@ -1,11 +1,11 @@
-#' ms_2D_barplotting_simprof
+#' IMPRINTS_complex_mapping_sh
 #'
 #' Function to generate 2D bar plot and pdf file with multipanel bar plots for 2D-CETSA data of
 #' proteins which have similar profile from a selected protein.
 #' It is totally based on the function ms_2D_barplotting from the mineCETSA package.
 #'
 #' @param data dataset after calculating the relative protein abundance differences and
-#'             deriving the average of the profile, ie ms_2D_average_sh,
+#'             deriving the average of the profile, ie IMPRINTS_average_sh,
 #'             make sure the columns with readings are named in the format like "37C_Treatment".
 #' @param categorytable Dataset containing the category of each proteins from data, ie hitlist.
 #'                      The column that contains the conditions must be named treatment.
@@ -24,7 +24,7 @@
 #' @export
 #'
 
-ms_2D_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL, treatment = NULL,
+IMPRINTS_complex_mapping_sh <- function (data, categorytable = NULL, set = NULL, treatment = NULL,
                                       complexdatabase = "Corum", organism = "Human", complexID = NULL,
                                       targetcategory = c("NC", "CN", "CC"), minsubunitsIdentified = 3,
                                       cutisoformbycount = TRUE)

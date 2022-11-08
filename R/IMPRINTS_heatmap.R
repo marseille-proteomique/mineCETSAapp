@@ -1,11 +1,11 @@
-#' ms_2D_heatmap
+#' IMPRINTS_heatmap
 #'
 #' Function to get the heatmap from your data.
 #'
-#' @param data Output data from ms_2D_average_sh
+#' @param data Output data from IMPRINTS_average_sh
 #' @param hit_summary The summary file from the hitlist output
 #' @param NN_data The NN file from the hitlist output
-#' @param PRcomplex_data Output data from ms_2D_complex_mapping_sh. If not NULL and hit_summary NULL, will
+#' @param PRcomplex_data Output data from IMPRINTS_complex_mapping_sh. If not NULL and hit_summary NULL, will
 #'                 print different heatmaps according to the protein complex.
 #' @param treatment A character telling the condition from which you want to see the heatmap
 #' @param max_na An integer indicating the maximum number of missing values per row (per protein)
@@ -23,12 +23,12 @@
 #'
 #' @return A grob object, the heatmap.
 #'
-#' @seealso \code{\link{ms_2D_average_sh}} , \code{\link{ms_2D_complex_mapping_sh}}
+#' @seealso \code{\link{IMPRINTS_average_sh}} , \code{\link{IMPRINTS_complex_mapping_sh}}
 #'
 #' @export
 #'
 
-ms_2D_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
+IMPRINTS_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
                           PRcomplex_data = NULL,
                           treatment, max_na = 0,
                           response = c("S", "D", "both"),
@@ -67,7 +67,6 @@ ms_2D_heatmap <- function(data, hit_summary = NULL, NN_data = NULL,
   if(length(gradient_color) < 3){
     stop("Please select at least 3 colors")
   }
-
 
   message("Clustering data")
   d <- dist(data1[,-1])

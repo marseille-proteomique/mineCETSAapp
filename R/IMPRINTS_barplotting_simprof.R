@@ -1,11 +1,11 @@
-#' ms_2D_barplotting_simprof
+#' IMPRINTS_barplotting_simprof
 #'
 #' Function to generate 2D bar plot and pdf file with multipanel bar plots for 2D-CETSA data of
 #' proteins which have similar profile from a selected protein.
 #' It is totally based on the function ms_2D_barplotting from the mineCETSA package.
 #'
 #' @param data dataset after ms_2D_caldiff to plot.
-#' @param data_average dataset after ms_2D_average_sh. If null, will get it from data.
+#' @param data_average dataset after IMPRINTS_average_sh. If null, will get it from data.
 #' @param treatmentlevel A single character element which corresponds to one of the condition from the data
 #' @param protein_profile A single character element which corresponds to one
 #'                        of the protein from the data that you want the similar profile
@@ -47,12 +47,12 @@
 #'
 #' @return The ms 2D barplot
 #'
-#' @seealso \code{\link{ms_2D_barplotting}} , \code{\link{ms_2D_corr_to_ref_sh}}
+#' @seealso \code{\link{ms_2D_barplotting}} , \code{\link{IMPRINTS_corr_to_ref_sh}}
 #'
 #' @export
 #'
 
-ms_2D_barplotting_simprof <- function (data, data_average = NULL,
+IMPRINTS_barplotting_simprof <- function (data, data_average = NULL,
                                        treatmentlevel = "Buparlisib6h", protein_profile = "P85037",
                                        setlevel = NULL, corrtable = NULL, plotseq = NULL,
                                        printBothName = TRUE, printGeneName = FALSE,
@@ -92,7 +92,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
   if(!got_it){
     if(is.null(data_average)){
       message("Start average calculation")
-      data_ave <- ms_2D_average_sh(data)
+      data_ave <- IMPRINTS_average_sh(data)
       message("Average calculation done !")
     }
     else{
@@ -123,7 +123,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
     }
 
     message("Getting similar profile")
-    data_simi <- ms_2D_corr_to_ref_sh(data_ave, treatment = treatmentlevel,
+    data_simi <- IMPRINTS_corr_to_ref_sh(data_ave, treatment = treatmentlevel,
                                       reference = target_profile,
                                       use_score = use_score,
                                       score_threshold = score_threshold,
@@ -182,7 +182,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
             q <- q + ylab("fold change") + ggtitle(paste(j,
                                                          as.character(unique(d2$id)), sep = "\n"))
           }
-          q <- q + labs(subtitle = subt$score[n_loop]) +
+          q <- q + labs(subtitle = subt$category[n_loop]) +
             theme_cowplot() + theme(text = element_text(size = 10),
                                     strip.text.x = element_text(size = 5),
                                     plot.title = element_text(hjust = 0.5,
@@ -208,6 +208,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                                         ncol = 1)
       return(q_list)
     }
+
     else {
       if (!log2scale) {
         minreading = 0.5
@@ -223,6 +224,16 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                               0.1, minreading), max(max(d1$mean, na.rm = T) +
                                                       0.1, maxreading))
       }
+      d1$QP <- FALSE
+      if("36C" %in% d1$temperature){
+        d1$QP[which(d1$temperature == "36C")] <- TRUE
+        lvl_tokeep <- levels(d1$condition)
+        lvl_tokeep <- stringr::str_replace_all(lvl_tokeep, "36C", "QP")
+        d1$condition <- as.character(d1$condition)
+        d1$condition[which(d1$temperature == "36C")] <- stringr::str_replace_all(d1$condition[which(d1$temperature == "36C")],
+                                                                                 "36C", "QP")
+        d1$condition <- factor(d1$condition, levels = lvl_tokeep)
+      }
       if (linegraph) {
         colorpanel <- PaletteWithoutGrey(temperature)
         q <- ggplot(d1, aes(x = treatment, y = mean,
@@ -232,18 +243,26 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
       }
       else if (!usegradient) {
         q <- ggplot(d1, aes(x = condition, y = mean,
-                            fill = treatment)) + geom_bar(stat = "identity") +
+                            fill = treatment)) + geom_bar(stat = "identity", aes(color = QP),
+                                                          size = rel(0.85)) +
           coord_cartesian(ylim = legendscale) + scale_fill_manual(drop = FALSE,
-                                                                  values = colorpanel)
+                                                                  values = colorpanel) +
+          scale_color_manual(values = c("TRUE" = "#656565", "FALSE" = "#FFFFFF00")) +
+          guides(color = "none") +
+          scale_x_discrete(labels = stringr::str_remove_all(levels(d1$condition), "_.{1,}"))
       }
       else {
         q <- ggplot(d1, aes(x = condition, y = mean,
-                            fill = mean)) + geom_bar(stat = "identity") +
+                            fill = mean)) + geom_bar(stat = "identity", aes(color = QP),
+                                                     size = rel(0.85)) +
           coord_cartesian(ylim = legendscale) +
           scale_fill_gradient2(limits = legendscale,
                                low = colorgradient[1], mid = colorgradient[2],
                                high = colorgradient[3], midpoint = 0, na.value = "gray90",
-                               guide = guide_colorbar(""))
+                               guide = guide_colorbar("")) +
+          scale_color_manual(values = c("TRUE" = "#656565", "FALSE" = "#FFFFFF00")) +
+          guides(color = "none") +
+          scale_x_discrete(labels = stringr::str_remove_all(levels(d1$condition), "_.{1,}"))
       }
       if (witherrorbar) {
         if (linegraph) {
@@ -261,7 +280,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
       else {
         q <- q + ylab("fold change") + ggtitle(as.character(unique(d1$id)))
       }
-      q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "score"]) +
+      q <- q + labs(subtitle = subt[as.character(unique(d1$id)), "category"]) +
         theme_cowplot() + theme(text = element_text(size = 10),
                                 strip.text.x = element_text(size = 5),
                                 plot.title = element_text(hjust = 0.5,size = rel(0.8)),
@@ -273,7 +292,8 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
                                 panel.grid.minor = element_blank(), strip.background = element_blank(),
                                 axis.line.x = element_line(), axis.line.y = element_line(),
                                 axis.text.x = element_text(angle = 45, hjust = 1,
-                                                           size = rel(0.7)), aspect.ratio = ratio)
+                                                           size = rel(0.7)),
+                                aspect.ratio = ratio)
       return(q)
     }
   }
@@ -324,7 +344,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
     if (modvar %in% c('YES','Y')){
       message("Let's get this profiles then !")
 
-      res <- ms_2D_barplotting_simprof(data, data_average = data_ave,
+      res <- IMPRINTS_barplotting_simprof(data, data_average = data_ave,
                                        treatmentlevel = treatmentlevel, protein_profile = protein_profile,
                                        setlevel = setlevel, corrtable = corrtable, plotseq = plotseq,
                                        printBothName = printBothName, printGeneName = printGeneName,
@@ -504,10 +524,11 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
 
       groups <- split(seq_along(plotsmain), gl(1, 1, 1))
       pl[["main"]] <- lapply(names(groups), function(i) {
-        gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
-                                        c(plotsmain[groups[[i]]], list(nrow = 1, ncol = 1),
-                                          top = toplabel, left = leftlabel,
-                                          bottom = bottomlabel)))
+        do.call(gridExtra::arrangeGrob,
+                c(plotsmain[groups[[i]]], list(nrow = 1, ncol = 1),
+                  top = toplabel, left = leftlabel,
+                  bottom = bottomlabel)
+                )
       })
 
 
@@ -518,10 +539,11 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
       n_p <- length(names(groups))
       pl[["all"]] <- lapply(names(groups), function(i) {
         message(paste("Saving page", i, "/", n_p))
-        gridExtra::grid.arrange(do.call(gridExtra::arrangeGrob,
-                                        c(plots[groups[[i]]], params,
-                                          top = toplabel, left = leftlabel,
-                                          bottom = bottomlabel)))
+        do.call(gridExtra::arrangeGrob,
+                c(plots[groups[[i]]], params,
+                  top = toplabel, left = leftlabel,
+                  bottom = bottomlabel)
+                )
       })
 
       class(pl[["main"]]) <- c("arrangelist", "ggplot", class(pl[["main"]]))
@@ -549,7 +571,7 @@ ms_2D_barplotting_simprof <- function (data, data_average = NULL,
     }
     else{
       g <- ggplot(data.frame(x = c(0,1), y = c(0,1)), aes(x,y, label = "s")) +
-        geom_text(x=0.5, y=0.5, label = "All the barplots have been saved succesfully !
+        geom_text(x=0.5, y=0.5, label = "All the barplots has been saved succesfully !
                                          \nGo check your files", size = 6) +
         theme_cowplot() +
         theme(axis.text.x = element_blank(),

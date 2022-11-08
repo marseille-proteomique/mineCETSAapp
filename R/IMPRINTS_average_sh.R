@@ -1,4 +1,4 @@
-#' ms_2D_average_sh
+#' IMPRINTS_average_sh
 #'
 #' Function to calculate the averaged signals from the IMPRTINTS-CETSA result
 #' It is totally based on the function ms_2D_average from the mineCETSA package.
@@ -13,7 +13,7 @@
 #' @export
 #'
 
-ms_2D_average_sh <- function (data, savefile = TRUE)
+IMPRINTS_average_sh <- function (data, savefile = TRUE)
 {
   filename <- paste0(deparse(substitute(data)), "_average", ".txt")
 
